@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def show_images(ls_img, titles=[], imsize=(7, 5), cmap=None, per_row=2,
-                keep_ticks=False):
+                keep_ticks=False, font_size=16):
     """makes a figure with enough subplots to show the images of `ls_img`
     """                
     # make sure ls_img is a list
@@ -36,7 +36,7 @@ def show_images(ls_img, titles=[], imsize=(7, 5), cmap=None, per_row=2,
         if this_cmap is None and (len(img.shape) == 2 or img.shape[-1] == 1):
             this_cmap = 'gray'
         ax[i].imshow(img, cmap=this_cmap, vmin=0, vmax=255)
-        ax[i].set_title(titles[i], fontdict={'fontsize': 25})
+        ax[i].set_title(titles[i], fontdict={'fontsize': font_size})
         if not keep_ticks:
             ax[i].set_xticks([])
             ax[i].set_yticks([])
