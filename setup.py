@@ -4,7 +4,7 @@ except:
     from distutils.core import setup
 
 setup(
-    name='ensemble_boxes',
+    name='cv_utils',
     version='0.0dev',
     author='Alexander Soare',
     packages=['cv_utils'],
