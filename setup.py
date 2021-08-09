@@ -15,5 +15,7 @@ setup(
         'matplotlib',
         'numpy',
         'opencv-python',
+        'scikit-learn',
+        'scipy'
     ],
 )
