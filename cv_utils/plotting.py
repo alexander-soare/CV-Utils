@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -7,11 +9,11 @@ def show_images(ls_img, titles=[], imsize=(7, 5), cmap=None, per_row=2,
     """makes a figure with enough subplots to show the images of `ls_img`
     """                
     # make sure ls_img is a list
-    if type(ls_img) != list:
+    if not isinstance(ls_img, Sequence):
         ls_img = [ls_img]
 
     # make sure titles is a list
-    if type(titles) != list:
+    if not isinstance(titles, Sequence):
         titles = [titles]
 
     # make sure titles is same length as ls_img
