@@ -12,8 +12,8 @@ setup(
     license='Apache 2.0',
     description='My own miscellaneous helpers for computer vision developement',
     install_requires=[
-        'numpy',
         'matplotlib',
+        'numpy',
         'opencv-python',
     ],
 )
