@@ -6,6 +6,8 @@ from numba import jit
 from scipy.spatial.distance import pdist, squareform
 from sklearn.cluster import AgglomerativeClustering
 
+from ._helpers import adapt_to_dims
+
 
 def draw_bboxes(
         img: np.ndarray, bboxes: Sequence[np.ndarray],
@@ -13,7 +15,7 @@ def draw_bboxes(
         labeled: bool = False, labels: Sequence[str] = [],
         label_font_size: float = 1., inplace:bool = False) -> np.ndarray:
     """
-    draw provided bboxes onto image. expects xyxy format
+    Draw provided bboxes onto image. Expects xyxy format
     `colors` may be a single color tuple, or a list of tuples, one for each bbox
     """
     # handle single color tuple of colors
@@ -118,6 +120,7 @@ def scale_bboxes(bboxes: np.ndarray, f, img_shape: Sequence):
     return bboxes
 
 
+@adapt_to_dims
 def norm_to_abs(bboxes: np.ndarray, img_shape: Sequence, inplace:bool=False) -> np.ndarray:
     """
     Convert from normalised bounding boxes (all coordinates in [0, 1] normalised
@@ -130,6 +133,7 @@ def norm_to_abs(bboxes: np.ndarray, img_shape: Sequence, inplace:bool=False) -> 
     return bboxes
 
 
+@adapt_to_dims
 def abs_to_norm(bboxes: np.ndarray, img_shape: Sequence, inplace:bool=False) -> np.ndarray:
     """
     convert from absolute bounding boxes (coordinate measured in array indices)
