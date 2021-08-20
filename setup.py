@@ -15,7 +15,9 @@ setup(
         'matplotlib',
         'numpy',
         'opencv-python',
+        'rasterio',
         'scikit-learn',
-        'scipy'
+        'scipy',
+        'shapely'
     ],
 )

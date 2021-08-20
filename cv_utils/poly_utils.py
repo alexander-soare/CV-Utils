@@ -2,8 +2,29 @@ from typing import Sequence, Union
 
 import numpy as np
 import cv2
+from rasterio.features import rasterize
+from shapely.geometry import Polygon
 
+from .bbox_utils import bbox_crop
 from ._helpers import adapt_to_dims
+
+
+def poly_crop(img: np.ndarray, poly: np.ndarray,
+              mask_val: Union[int, Sequence, None] = None) -> np.ndarray:
+    """
+    Gets a square crop around a provided polygon
+    If `mask_val` is provided, the area not covered by the polygon is masked away
+    with the color represented by masks. `mask_val` should be a tuple if the 
+    image has multiple channels or an integer if the image is grayscale
+    """
+    if mask_val is not None:
+        sh_poly = Polygon(poly.astype(int).reshape(-1, 2))
+        mask = rasterize([sh_poly], out_shape=img.shape[:2])
+        img = img.copy()
+        img[mask == 0] *= 0
+        img[mask == 0] = np.array(mask_val)
+    bbox = poly_to_bbox(poly)
+    return bbox_crop(img, bbox)
 
 
 def draw_polygons(
