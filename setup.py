@@ -13,6 +13,7 @@ setup(
     description='My own miscellaneous helpers for computer vision developement',
     install_requires=[
         'matplotlib',
+        'numba',
         'numpy',
         'opencv-python',
         'rasterio',
