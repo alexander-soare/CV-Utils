@@ -50,7 +50,7 @@ def bbox_crop(img: np.ndarray, bbox: Sequence):
     performs rounding on the bbox co-ordinates
     """
     bbox = np.round(np.array(bbox)).astype(int)
-    return img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+    return img[bbox[1]:bbox[3], bbox[0]:bbox[2]].copy()
 
 
 def xyxy_to_xywh(bboxes: np.ndarray) -> np.ndarray:
