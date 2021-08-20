@@ -46,14 +46,14 @@ def resize_longest_edge(
 
 
 def resize_to_area(
-        img: np.ndarray, area: int, interpolation=None,
+        img: np.ndarray, area: int, interpolation=cv2.INTER_LINEAR,
         min_factor=np.float('-inf'), max_factor=np.float('inf')) -> np.ndarray:
     """
     resize an image such that:
      - aspect ratio is maintained
      - the area ~ `area` but we keep into account min factor and max factor
     `interpolation` specifies the cv2 interpolation type and defaults to
-    cv2.INTER_LINERAR It may be specified as 'auto' in which case either
+    cv2.INTER_LINEAR. It may be specified as 'auto' in which case either
     cv2.INTER_AREA or cv2.INTERCUBIC is used depnding on whether we are
     downsizing or upsizing (respectively)
     """
