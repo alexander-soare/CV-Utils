@@ -25,16 +25,19 @@ def resize_shortest_edge(
 
 def resize_longest_edge(
         img: np.ndarray, length: int,
-        interpolation: Union[int, str]=cv2.INTER_LINEAR):
+        interpolation: Union[int, str]=cv2.INTER_LINEAR,
+        min_factor=np.float('-inf'), max_factor=np.float('inf')):
     """
     Resize image with locked aspect ratio such that its longest side is `length`
-    pixels long.
+    pixels long BUT we keep into account min factor and max factor.
     `interpolation` specifies the cv2 interpolation type and defaults to
     cv2.INTER_LINERAR It may be specified as 'auto' in which case either
     cv2.INTER_AREA or cv2.INTERCUBIC is used depnding on whether we are
     downsizing or upsizing (respectively)
     """
     f = length/np.max(img.shape[:2])
+    f = min(max_factor, f)
+    f = max(min_factor, f)
     if isinstance(interpolation, str):
         assert interpolation == 'auto', \
             "If `interpolation` is a str it can only be 'auto'"
