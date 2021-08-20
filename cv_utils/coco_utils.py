@@ -1,3 +1,7 @@
+"""
+Useful helpers for coco datasets
+"""
+
 import os.path as osp
 import json
 from pathlib import Path
@@ -6,10 +10,7 @@ from copy import deepcopy
 
 import cv2
 import numpy as np
-from matplotlib.pyplot import draw
 from .bbox_utils import draw_bboxes
-from .poly_utils import draw_polygons
-
 
 class CocoDataset():
     def __init__(self, json_file):
@@ -31,7 +32,7 @@ class CocoDataset():
             image_id = image_row.pop('id')
             self.image_items[image_id] = image_row
             self.image_items[image_id]['annotations'] = {}
-            for ann_row in deepcopy(self.data['annotations']):
+            for ann_row in self.data['annotations']:
                 if ann_row['image_id'] != image_id:
                     continue
                 ann_id = ann_row.pop('id')
@@ -70,7 +71,6 @@ class CocoDataset():
         bboxes = np.array(bboxes)
         category_names = [
             self.categories[cat_id] for cat_id in category_ids]
-        print(bboxes)
         drawn = draw_bboxes(
             img, bboxes.astype(int), labels=category_names, labeled=True)
         return drawn
