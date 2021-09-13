@@ -1,6 +1,5 @@
 from typing import Sequence, Callable
 
-import cv2
 import numpy as np
 from numba import jit
 from scipy.spatial.distance import pdist, squareform
@@ -8,32 +7,8 @@ from sklearn.cluster import AgglomerativeClustering
 
 from ._helpers import adapt_to_dims
 
-
-def draw_bboxes(
-        img: np.ndarray, bboxes: Sequence[np.ndarray],
-        thickness: int = 2, colors: Sequence[Sequence[int]] = [(0,255,0)],
-        labeled: bool = False, labels: Sequence[str] = [],
-        label_font_size: float = 1., inplace:bool = False) -> np.ndarray:
-    """
-    Draw provided bboxes onto image. Expects xyxy format
-    `colors` may be a single color tuple, or a list of tuples, one for each bbox
-    """
-    # handle single color tuple of colors
-    if len(colors) == 1 and len(bboxes) > 1:
-        colors = colors*len(bboxes)
-    if len(colors) == 3 and isinstance(colors[0], int):
-        colors = [colors]*len(bboxes)
-    if not inplace:
-        img = img.copy()
-    for i, (color, bbox) in enumerate(zip(colors, bboxes)):
-        cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color,
-                        thickness=thickness)
-        if labeled:
-            label = f'{i:02d}' if len(labels) == 0 else labels[i]
-            cv2.putText(
-                img, label, (bbox[0], bbox[1]-3), cv2.FONT_HERSHEY_SIMPLEX,
-                label_font_size, color, thickness)
-    return img
+# BC
+from .render import draw_bboxes
 
 
 def bounding_bbox(bboxes: Sequence[np.ndarray]) -> np.ndarray:

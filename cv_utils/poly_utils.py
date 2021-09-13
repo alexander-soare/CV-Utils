@@ -1,42 +1,14 @@
 from typing import Sequence, Union
 
 import numpy as np
-import cv2
 from rasterio.features import rasterize
 from shapely.geometry import Polygon
 
 from .bbox_utils import bbox_crop
 from ._helpers import adapt_to_dims
 
-
-# Taken from
-# https://github.com/open-mmlab/mmocr/blob/b8f7ead74cb0200ad5c422e82724ca6b2eb1c543/mmocr/datasets/pipelines/box_utils.py
-def sort_vertices(vertices):
-    """
-    Sort (N, 2) array of N vertices with xy coords) such that the top-left
-    vertex is first, and they are in clockwise order
-    """
-    assert vertices.ndim == 2
-    assert vertices.shape[-1] == 2
-    N = vertices.shape[0]
-    if N == 0:
-        return vertices
-
-    # Sort vertices in clockwise order starting from negative x-axis
-    # about the centroid
-    centroid = np.mean(vertices, axis=0)
-    directions = vertices - centroid
-    angles = np.arctan2(directions[:, 1], directions[:, 0])
-    sort_idx = np.argsort(-angles)
-    vertices = vertices[sort_idx]
-
-    # Find the top left (closest to an axis-aligned bounding box top-left point)
-    left_top = np.min(vertices, axis=0)
-    # Rotated vertex indices such that the first is the top-left one
-    dists = np.linalg.norm(left_top - vertices, axis=-1, ord=2)
-    lefttop_idx = np.argmin(dists)
-    indexes = (np.arange(N, dtype=np.int) + lefttop_idx) % N
-    return vertices[indexes]
+#BC
+from .render import draw_polygons
 
 
 def poly_crop(img: np.ndarray, poly: np.ndarray,
@@ -55,38 +27,6 @@ def poly_crop(img: np.ndarray, poly: np.ndarray,
         img[mask == 0] = np.array(mask_val)
     bbox = poly_to_bbox(poly)
     return bbox_crop(img, bbox)
-
-
-def draw_polygons(
-        img: np.ndarray, polys: Sequence[np.ndarray],
-        thickness: int = 2, colors: Sequence[Sequence[int]] = [(0,255,0)],
-        labeled: bool = False, labels: Sequence[str] = [],
-        label_font_size: float = 1., inplace:bool = False) -> np.ndarray:
-    """
-    Draw provided polys onto image. Expects list of numpy arrays. Each
-    numpy array is a 1D sequence of xy pairs.
-    `colors` may be a single color tuple, or a list of tuples, one for each bbox
-    """
-    # handle single color tuple of colors
-    if len(colors) == 1 and len(polys) > 1:
-        colors = colors*len(polys)
-    if len(colors) == 3 and isinstance(colors[0], int):
-        colors = [colors]*len(polys)
-    if not inplace:
-        img = img.copy()
-    for i, (color, poly) in enumerate(zip(colors, polys)):
-        # Sort vertices is just for making sure the label is on the top left
-        if labeled:
-            poly = sort_vertices(poly.reshape(-1, 2)).flatten()
-        cv2.polylines(
-            img, [poly.reshape(-1, 1, 2)], isClosed=True, color=color,
-            thickness=thickness)
-        if labeled:
-            label = f'{i:02d}' if len(labels) == 0 else labels[i]
-            cv2.putText(
-                img, label, (poly[0], poly[1] - 3), cv2.FONT_HERSHEY_SIMPLEX,
-                label_font_size, color, thickness)
-    return img
 
 
 @adapt_to_dims
