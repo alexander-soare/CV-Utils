@@ -1,3 +1,4 @@
+from typing import Sequence
 import numpy as np
 
 
@@ -24,7 +25,7 @@ def adapt_to_dims(f):
 
 # Taken from
 # https://github.com/open-mmlab/mmocr/blob/b8f7ead74cb0200ad5c422e82724ca6b2eb1c543/mmocr/datasets/pipelines/box_utils.py
-def _sort_vertices(vertices):
+def sort_vertices(vertices):
     """
     Sort (N, 2) array of N vertices with xy coords) such that the top-left
     vertex is first, and they are in clockwise order
@@ -50,3 +51,9 @@ def _sort_vertices(vertices):
     lefttop_idx = np.argmin(dists)
     indexes = (np.arange(N, dtype=np.int) + lefttop_idx) % N
     return vertices[indexes]
+
+
+def to_2tuple(x):
+    if not isinstance(x, Sequence):
+        x = (x, x)
+    return x

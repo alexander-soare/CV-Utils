@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ._helpers import _sort_vertices
+from ._helpers import sort_vertices
 
 
 def show_images(ls_img, titles=[], imsize=(7, 5), cmap=None, per_row=2,
@@ -72,7 +72,7 @@ def _draw_outlines(
         if outline_type == 'poly':
             # Sort vertices is just for making sure the label is on the top left
             if len(labels):
-                outline = _sort_vertices(outline.reshape(-1, 2)).flatten()
+                outline = sort_vertices(outline.reshape(-1, 2)).flatten()
             cv2.polylines(
                 img, [outline.reshape(-1, 1, 2)], isClosed=True, color=color,
                 thickness=thickness)
