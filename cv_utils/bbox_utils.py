@@ -74,24 +74,17 @@ def xywh_to_xyxy(bboxes: np.ndarray) -> np.ndarray:
     return bboxes
 
 
-def scale_bboxes(bboxes: np.ndarray, f, img_shape: Sequence):
+@adapt_to_dims
+def scale_bboxes(bboxes: np.ndarray, f: float, img_shape: Sequence):
     """
-    centerwise scaling of bboxes, clipping everything to stay within image bounds
-    bbox should be a list or a numpy array
-    assumes bboxes are in xyxy format
-    f is in xy fromat
+    Centerwise scaling of bboxes, clipping everything to stay within image
+    bounds.
     """
-    is_1d = False
-    if len(bboxes.shape) == 1:
-        is_1d = True
-        bboxes = np.expand_dims(bboxes, axis=0)
     bboxes = xyxy_to_xywh(bboxes)
     bboxes[:, 2:] = np.round(bboxes[:, 2:] * f)
     bboxes = xywh_to_xyxy(bboxes)
     bboxes[:, [0, 2]] = np.clip(bboxes[:, [0, 2]], 0, img_shape[1])
     bboxes[:, [1, 3]] = np.clip(bboxes[:, [1, 3]], 0, img_shape[0])
-    if is_1d:
-        bboxes = bboxes.flatten()
     return bboxes
 
 
