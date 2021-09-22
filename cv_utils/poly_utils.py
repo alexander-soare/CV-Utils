@@ -1,14 +1,16 @@
-from typing import Sequence, Union
+from typing import Sequence, Union, Optional, Tuple
 
 import numpy as np
 from rasterio.features import rasterize
 from shapely.geometry import Polygon
+import shapely
 
 from .bbox_utils import bbox_crop
 from ._helpers import adapt_to_dims
 
-#BC
+# BC
 from .render import draw_polygons
+from ._helpers import to_2tuple
 
 
 def poly_crop(img: np.ndarray, poly: np.ndarray,
@@ -27,6 +29,28 @@ def poly_crop(img: np.ndarray, poly: np.ndarray,
         img[mask == 0] = np.array(mask_val)
     bbox = poly_to_bbox(poly)
     return bbox_crop(img, bbox)
+
+
+def scale_poly(poly: np.ndarray, f: Union[float, Tuple[float, float]],
+               img_shape: Optional[Sequence] = None,
+               shapely_origin: str = 'centroid') -> np.ndarray:
+    """
+    Take an xyxyxyxy polygon and scale it (centerwise) by factor f.
+    f may be a tuple in which case the first component refers to x and the
+    second to y.
+    img_shape may be provided to make sure we clip the result to the image
+    shape. NOTE that this would change the shape of the polygon.
+    shapely_origin is the origin kwarg for shapely.affinity.scale
+    """
+    f = to_2tuple(f)
+    sh_poly = Polygon(poly.reshape(-1, 2))
+    sh_poly = shapely.affinity.scale(
+        sh_poly, xfact=f[0], yfact=f[1], origin=shapely_origin)
+    poly = np.array(*[sh_poly.exterior.xy]).T.flatten()
+    if img_shape is not None:
+        poly[0::2] = np.clip(poly[0::2], 0, img_shape[1])
+        poly[1::2] = np.clip(poly[1::2], 0, img_shape[0])
+    return poly
 
 
 @adapt_to_dims
