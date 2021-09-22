@@ -46,7 +46,7 @@ def scale_poly(poly: np.ndarray, f: Union[float, Tuple[float, float]],
     sh_poly = Polygon(poly.reshape(-1, 2))
     sh_poly = shapely.affinity.scale(
         sh_poly, xfact=f[0], yfact=f[1], origin=shapely_origin)
-    poly = np.array(*[sh_poly.exterior.xy]).T.flatten()
+    poly = np.array(*[sh_poly.exterior.xy]).T.flatten()[:8]
     if img_shape is not None:
         poly[0::2] = np.clip(poly[0::2], 0, img_shape[1])
         poly[1::2] = np.clip(poly[1::2], 0, img_shape[0])
