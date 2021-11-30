@@ -77,8 +77,9 @@ def _draw_outlines(
                 img, [outline.reshape(-1, 1, 2)], isClosed=True, color=color,
                 thickness=thickness)
         elif outline_type == 'aab':
-            cv2.rectangle(img, (outline[0], outline[1]), (outline[2], outline[3]), color,
-                        thickness=thickness)
+            cv2.rectangle(
+                img, (outline[0], outline[1]), (outline[2], outline[3]),
+                color, thickness=thickness)
         if len(labels):
             label = f'{i:02d}' if len(labels) == 0 else labels[i]
             cv2.putText(
