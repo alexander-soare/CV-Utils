@@ -1,20 +1,42 @@
-from typing import Sequence, Union, Optional, Tuple
+from typing import Sequence, Union, Optional, Tuple, List
 
 import numpy as np
 from rasterio.features import rasterize
 from shapely.geometry import Polygon
 import shapely
+import cv2
 
 from .bbox_utils import bbox_crop
-from ._helpers import adapt_to_dims
-
-# BC
-from .render import draw_polygons
-from ._helpers import to_2tuple
+from ._helpers import adapt_to_dims, to_2tuple
+from .render import draw_polygons  # BC
 
 
-def poly_crop(img: np.ndarray, poly: np.ndarray,
-              mask_val: Union[int, Sequence, None] = None) -> np.ndarray:
+def mask_to_polys(mask: np.ndarray) -> List[np.ndarray]:
+    """
+    Takes a binary mask and return the polygons within it. Does not yet handle interior polys, ie mask regions must
+    not have holes in them (an error will be raised if they do).
+    Polys are returned in absolute xy... format
+    """
+    cnts, hier = cv2.findContours(mask.astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # Check that none of the contours have parents
+    if np.all(hier[..., -1] == -1):
+        print("WARNING (in mask_to_polys): Handling holes is not implemented yet. Holes will be ignored")
+    return [cnt.flatten() for cnt, h in zip(cnts, hier.reshape(-1, 2)) if h[-1] == -1]
+
+
+def polys_to_mask(polys: Union[List[np.ndarray], np.ndarray], out_shape: Tuple[int, int]) -> np.ndarray:
+    """
+    Take a list of polys and convert them to a binary mask with `out_shape`. A single poly may also be provided.
+    NOTE: This does not yet support polys within polys (holes), so `polys` should not contain any overlapping polys.
+    """
+    if not isinstance(polys, list):
+        polys = [polys]
+    sh_polys = [Polygon(poly.reshape(-1, 2)) for poly in polys]
+    mask =rasterize([sh_polys], out_shape=out_shape)
+    return mask
+
+
+def poly_crop(img: np.ndarray, poly: np.ndarray, mask_val: Union[int, Sequence, None] = None) -> np.ndarray:
     """
     Gets a square crop around a provided polygon
     If `mask_val` is provided, the area not covered by the polygon is masked away
@@ -22,8 +44,7 @@ def poly_crop(img: np.ndarray, poly: np.ndarray,
     image has multiple channels or an integer if the image is grayscale
     """
     if mask_val is not None:
-        sh_poly = Polygon(poly.astype(int).reshape(-1, 2))
-        mask = rasterize([sh_poly], out_shape=img.shape[:2])
+        mask = polys_to_mask(poly)
         img = img.copy()
         img[mask == 0] *= 0
         img[mask == 0] = np.array(mask_val)
@@ -31,9 +52,9 @@ def poly_crop(img: np.ndarray, poly: np.ndarray,
     return bbox_crop(img, bbox)
 
 
-def scale_poly(poly: np.ndarray, f: Union[float, Tuple[float, float]],
-               img_shape: Optional[Sequence] = None,
-               shapely_origin: str = 'centroid') -> np.ndarray:
+def scale_poly(
+        poly: np.ndarray, f: Union[float, Tuple[float, float]], img_shape: Optional[Sequence] = None,
+        shapely_origin: str = 'centroid') -> np.ndarray:
     """
     Take an xyxyxyxy polygon and scale it (centerwise) by factor f.
     f may be a tuple in which case the first component refers to x and the
