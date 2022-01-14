@@ -1,10 +1,17 @@
 from typing import Sequence, Union, Optional, Tuple, List
+import warnings
 
 import numpy as np
 from rasterio.features import rasterize
 from shapely.geometry import Polygon
 import shapely
 import cv2
+
+try:
+    import pycocotools.mask as mask_util
+    has_pycocotools = True
+except ImportError:
+    has_pycocotools = False
 
 from .bbox_utils import bbox_crop
 from ._helpers import adapt_to_dims, to_2tuple
@@ -17,11 +24,17 @@ def mask_to_polys(mask: np.ndarray) -> List[np.ndarray]:
     not have holes in them (an error will be raised if they do).
     Polys are returned in absolute xy... format
     """
-    cnts, hier = cv2.findContours(mask.astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hier = cv2.findContours(mask.astype(np.uint8), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     # Check that none of the contours have parents
     if np.all(hier[..., -1] == -1):
-        print("WARNING (in mask_to_polys): Handling holes is not implemented yet. Holes will be ignored")
-    return [cnt.flatten() for cnt, h in zip(cnts, hier.reshape(-1, 2)) if h[-1] == -1]
+        # Clue here https://github.com/facebookresearch/detectron2/blob/e3ed623d0c7bddeb01a84ecad85083c09e596d83/detectron2/utils/visualizer.py#L119
+        # as to how to do this, but even if I do it, might not make much sense unless there's a way to make use of it
+        # downstream. In the current representation (list of np.ndarrays) there's nothing to say which polygons
+        # represent holes
+        warnings.warn(
+            "WARNING (in mask_to_polys): There are holes present in the mask. These will be converted to polygons but "
+            "the fact that they are holes will be lost.")
+    return [cnt.flatten() for cnt in cnts]
 
 
 def polys_to_mask(polys: Union[List[np.ndarray], np.ndarray], out_shape: Tuple[int, int]) -> np.ndarray:
@@ -31,9 +44,15 @@ def polys_to_mask(polys: Union[List[np.ndarray], np.ndarray], out_shape: Tuple[i
     """
     if not isinstance(polys, list):
         polys = [polys]
-    sh_polys = [Polygon(poly.reshape(-1, 2)) for poly in polys]
-    mask =rasterize([sh_polys], out_shape=out_shape)
-    return mask
+    if has_pycocotools:  # I think this is way faster
+        rles = mask_util.frPyObjects(polys, *out_shape[:2])
+        rle = mask_util.merge(rles)
+        return mask_util.decode(rle).astype(np.bool)
+    else:
+        warnings.warn("Using rasterio but pycocotools could be much faster. Install it with `pip install pycocotools`")
+        sh_polys = [Polygon(poly.reshape(-1, 2)) for poly in polys]
+        mask = rasterize(sh_polys, out_shape=out_shape)
+        return mask
 
 
 def poly_crop(img: np.ndarray, poly: np.ndarray, mask_val: Union[int, Sequence, None] = None) -> np.ndarray:
