@@ -24,6 +24,9 @@ def mask_to_polys(mask: np.ndarray) -> List[np.ndarray]:
     not have holes in them (an error will be raised if they do).
     Polys are returned in absolute xy... format
     """
+    if mask.sum() == 0:  # Empty mask returns empty list and raises warning
+        warnings.warn("WARNING (in mask_to_polys): An empty mask was given.")
+        return []
     cnts, hier = cv2.findContours(mask.astype(np.uint8), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     # Check that none of the contours have parents
     if np.all(hier[..., -1] == -1):
